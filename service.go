@@ -166,6 +166,41 @@ func (s *Service) CanDeleteFolder(ctx context.Context, folderID uint) (bool, int
 	return count == 0, count, nil
 }
 
+// ==================== 计数更新（事件驱动调用） ====================
+
+// OnArticleCreated 文章创建时调用，增加文件夹计数
+func (s *Service) OnArticleCreated(ctx context.Context, folderID *uint) error {
+	if folderID == nil {
+		return nil
+	}
+	return s.folderService.IncrementItemCount(ctx, *folderID, 1)
+}
+
+// OnArticleDeleted 文章删除时调用，减少文件夹计数
+func (s *Service) OnArticleDeleted(ctx context.Context, folderID *uint) error {
+	if folderID == nil {
+		return nil
+	}
+	return s.folderService.IncrementItemCount(ctx, *folderID, -1)
+}
+
+// OnArticleMoved 文章移动时调用，更新新旧文件夹计数
+func (s *Service) OnArticleMoved(ctx context.Context, oldFolderID, newFolderID *uint) error {
+	// 从旧文件夹移出
+	if oldFolderID != nil {
+		if err := s.folderService.IncrementItemCount(ctx, *oldFolderID, -1); err != nil {
+			return err
+		}
+	}
+	// 移入新文件夹
+	if newFolderID != nil {
+		if err := s.folderService.IncrementItemCount(ctx, *newFolderID, 1); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // getFolderInfo 获取单个文件夹信息
 func (s *Service) getFolderInfo(ctx context.Context, folderID uint) (*FolderInfo, error) {
 	f, err := s.folderService.GetFolder(ctx, folderID)
