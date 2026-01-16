@@ -132,10 +132,10 @@ type PageResultWithFolder struct {
 	Size        int                  `json:"size"`
 	Current     int                  `json:"current"`
 	Pages       int                  `json:"pages"`
-	HasPrevious bool                 `json:"hasPrevious"`
-	HasNext     bool                 `json:"hasNext"`
-	IsFirst     bool                 `json:"isFirst"`
-	IsLast      bool                 `json:"isLast"`
+	HasPrevious bool                 `json:"has_previous"`
+	HasNext     bool                 `json:"has_next"`
+	IsFirst     bool                 `json:"is_first"`
+	IsLast      bool                 `json:"is_last"`
 }
 
 // MoveArticleToFolder 移动文章到指定文件夹（带验证）
