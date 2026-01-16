@@ -66,9 +66,25 @@ func (s *Service) GetArticleWithFolder(ctx context.Context, articleID uint) (*Ar
 }
 
 // ListArticlesWithFolder 获取文章列表（带文件夹信息）
+// 当指定 folderID 时，会自动查询该分类及其所有子分类下的文章
 func (s *Service) ListArticlesWithFolder(ctx context.Context, page, size int, ownerId *uint, ownerType, articleType, title string, folderID *uint) (*PageResultWithFolder, error) {
-	// 1. 获取文章列表
-	result, err := s.articleService.ListArticles(ctx, page, size, ownerId, ownerType, articleType, title, folderID)
+	var result *article.PageResult
+	var err error
+
+	// 1. 如果指定了 folderID，获取该分类及所有子分类的 ID
+	if folderID != nil {
+		descendantIDs, err := s.folderService.GetDescendantIDs(ctx, *folderID)
+		if err != nil {
+			// 如果获取子孙失败，回退到单个 folderID 查询
+			result, err = s.articleService.ListArticles(ctx, page, size, ownerId, ownerType, articleType, title, folderID)
+		} else {
+			// 使用多个 folderID 查询
+			result, err = s.articleService.ListArticlesByFolderIDs(ctx, page, size, ownerId, ownerType, articleType, title, descendantIDs)
+		}
+	} else {
+		result, err = s.articleService.ListArticles(ctx, page, size, ownerId, ownerType, articleType, title, folderID)
+	}
+
 	if err != nil {
 		return nil, err
 	}
